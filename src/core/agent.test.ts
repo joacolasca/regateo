@@ -6,6 +6,9 @@ import type { Scenario } from './types';
 
 const scenario: Scenario = {
   id: 't',
+  featured: false,
+  title: { es: 't', en: 't' },
+  productEn: 'thermal cups 8 oz',
   request: { product: 'vasos térmicos 8 oz', quantity: 500, deadlineDays: 5, budgetCents: 12_000_000 },
   policy: { maxTotalCents: 12_000_000, autoApproveUpToCents: 8_000_000, maxDeliveryDays: 5, blockedSupplierIds: [] },
   suppliers: [

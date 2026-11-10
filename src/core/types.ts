@@ -1,4 +1,5 @@
 export type Cents = number;
+export type Lang = 'es' | 'en';
 
 export interface PurchaseRequest {
   product: string;
@@ -38,6 +39,9 @@ export interface ChatMessage {
 
 export interface Scenario {
   id: string;
+  featured: boolean;
+  title: Record<Lang, string>;
+  productEn: string;
   request: PurchaseRequest;
   policy: Policy;
   suppliers: SupplierProfile[];

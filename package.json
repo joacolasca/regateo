@@ -1,5 +1,5 @@
 {
-  "name": "agente-compras",
+  "name": "regateo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,9 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "demo": "tsx --env-file=.env.local scripts/demo.ts"
+    "demo": "tsx --env-file=.env.local scripts/demo.ts",
+    "record": "tsx --env-file=.env.local scripts/record.ts",
+    "evals": "tsx --env-file=.env.local scripts/evals.ts"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",

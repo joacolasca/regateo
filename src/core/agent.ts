@@ -4,7 +4,7 @@ import type { LLM } from './llm';
 import { evaluateOffer, type Decision } from './policy';
 import { rankOffers } from './rank';
 import { supplierReply } from './supplier';
-import type { Cents, ChatMessage, Offer, Scenario } from './types';
+import type { Cents, ChatMessage, Lang, Offer, Scenario } from './types';
 
 export const MAX_ROUNDS = 3;
 export const MAX_STEPS = 16;
@@ -25,7 +25,7 @@ interface Thread {
   offer?: Offer;
 }
 
-const SYSTEM = [
+const systemPrompt = (lang: Lang) => [
   'Sos el agente de compras de una pyme argentina. Tu trabajo: conseguir la mejor oferta que cumpla las reglas del dueño.',
   'En cada turno elegí UNA herramienta y respondé solo con JSON:',
   '- {"tool":"request_quote","supplierId":"...","message":"..."}: primer contacto con un proveedor.',
@@ -34,7 +34,10 @@ const SYSTEM = [
   `Máximo ${MAX_ROUNDS} mensajes por proveedor. Pedí cotización a todos antes de negociar.`,
   'Negociá con argumentos reales: fecha límite, presupuesto, ofertas de otros proveedores. No inventes ofertas que no recibiste.',
   'En los mensajes y en la explicación hablá siempre en pesos (centavos dividido 100: 24500 centavos son $245). Nunca escribas la palabra "centavos".',
-  'Los mensajes van en español rioplatense, breves. La explicación final dice por qué gana esa oferta y por qué pierden las otras.',
+  'Los mensajes son breves. La explicación final dice por qué gana esa oferta y por qué pierden las otras.',
+  lang === 'en'
+    ? 'Write every message and the final explanation in natural business English. Amounts stay in Argentine pesos.'
+    : 'Escribí los mensajes y la explicación en español rioplatense.',
 ].join('\n');
 
 function statePrompt(s: Scenario, threads: Map<string, Thread>): string {
@@ -59,8 +62,11 @@ export async function runAgent(
   deps: { agentLlm: LLM; supplierLlm: LLM },
   scenario: Scenario,
   emit: Emit,
+  lang: Lang = 'es',
 ): Promise<RunResult> {
-  const { request, policy, suppliers } = scenario;
+  const { policy, suppliers } = scenario;
+  const request = lang === 'en' ? { ...scenario.request, product: scenario.productEn } : scenario.request;
+  const localized = { ...scenario, request };
   const threads = new Map<string, Thread>(suppliers.map((s) => [s.id, { history: [], rounds: 0 }]));
   emit({ type: 'run_started', request, policy, suppliers: suppliers.map(({ id, name }) => ({ id, name })) });
 
@@ -77,7 +83,7 @@ export async function runAgent(
   for (let step = 0; step < MAX_STEPS; step++) {
     let action: z.infer<typeof AgentActionSchema>;
     try {
-      action = await deps.agentLlm.generateJson({ system: SYSTEM, prompt: statePrompt(scenario, threads), schema: AgentActionSchema });
+      action = await deps.agentLlm.generateJson({ system: systemPrompt(lang), prompt: statePrompt(localized, threads), schema: AgentActionSchema });
     } catch {
       emit({ type: 'error', message: 'agent_llm_failed' });
       break;
@@ -111,7 +117,7 @@ export async function runAgent(
     thread.history.push({ from: 'agent', text: action.message });
     emit({ type: 'agent_message', supplierId: profile.id, tool: action.tool, round: thread.rounds, text: action.message });
 
-    const turn = await supplierReply(deps.supplierLlm, profile, request, thread.history, thread.rounds);
+    const turn = await supplierReply(deps.supplierLlm, profile, request, thread.history, thread.rounds, lang);
     if (!turn.ok) {
       emit({ type: 'round_discarded', supplierId: profile.id, reason: turn.reason });
       continue;
@@ -126,5 +132,5 @@ export async function runAgent(
     emit({ type: 'error', message: 'no_offers' });
     return { status: 'failed' };
   }
-  return finish(best.offer.supplierId, 'Recomendación automática: se alcanzó el límite del agente y esta es la oferta mejor rankeada.', true);
+  return finish(best.offer.supplierId, '', true);
 }
