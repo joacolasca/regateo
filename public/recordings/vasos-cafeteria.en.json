@@ -1,0 +1,254 @@
+{
+  "scenarioId": "vasos-cafeteria",
+  "lang": "en",
+  "model": "gemini-3.5-flash-lite",
+  "recordedAt": "2026-11-10T18:19:04.067Z",
+  "events": [
+    {
+      "type": "run_started",
+      "request": {
+        "product": "8 oz insulated cups",
+        "quantity": 500,
+        "deadlineDays": 5,
+        "budgetCents": 12000000
+      },
+      "policy": {
+        "maxTotalCents": 12000000,
+        "autoApproveUpToCents": 8000000,
+        "maxDeliveryDays": 5,
+        "blockedSupplierIds": []
+      },
+      "suppliers": [
+        {
+          "id": "envases-sur",
+          "name": "Envases Sur"
+        },
+        {
+          "id": "descartables-ya",
+          "name": "Descartables Ya"
+        },
+        {
+          "id": "packnorte",
+          "name": "PackNorte"
+        }
+      ]
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "envases-sur",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hello, we need a quote for 500 units of 8 oz insulated cups. Delivery is required within a maximum of 5 days. Please let us know your best price and availability."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "envases-sur",
+      "text": "Hi! For 500 units of the 8 oz insulated cups, our standard price is $248 each. Regarding delivery, 5 days is super tight for us, normally it takes 6 days, but we can make it work if we close the deal today.",
+      "offer": {
+        "supplierId": "envases-sur",
+        "unitPriceCents": 24800,
+        "deliveryDays": 5,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "descartables-ya",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hello, we need a quote for 500 units of 8 oz insulated cups. Delivery is required within 5 days maximum. Please let us know your best price and availability."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "descartables-ya",
+      "text": "Hey there! Thanks for reaching out to Descartables Ya. For the 500 units of 8 oz insulated cups, our best price right now is $224 each. We've got the absolute lowest prices in the market, no doubt! Regarding the delivery, I gotta be straight with you, logistics are a bit tight right now, so the absolute fastest we can get them to you is in 7 days, no way to rush it earlier. Let me know if that works for you!",
+      "offer": {
+        "supplierId": "descartables-ya",
+        "unitPriceCents": 22400,
+        "deliveryDays": 7,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "packnorte",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hello, we need a quote for 500 units of 8 oz insulated cups. Delivery is required within 5 days maximum, and our total budget is $120,000. Please let us know your best price and availability."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "packnorte",
+      "text": "Good morning. Thank you for contacting PackNorte. For 500 units of our 8 oz insulated cups, our standard list price is $256 per unit, and delivery takes 4 days. Given the volume, we can offer them at $256 each. We cannot meet your target budget of $120,000, as our pricing policy is strict.",
+      "offer": {
+        "supplierId": "packnorte",
+        "unitPriceCents": 25600,
+        "deliveryDays": 4,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "envases-sur",
+      "tool": "counter_offer",
+      "round": 2,
+      "text": "Hi Envases Sur, we have a competing quote of $224 per unit for the 8 oz insulated cups, but you offer the 5-day delivery we need. Can you match $224 per unit so we can close the deal today?"
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "envases-sur",
+      "text": "Look, I can't go down to $224 because that's way below our cost, but since you're ready to close today and need those 5 days, I can cut it down to $228 per unit. That's my absolute best.",
+      "offer": {
+        "supplierId": "envases-sur",
+        "unitPriceCents": 22800,
+        "deliveryDays": 5,
+        "round": 2
+      }
+    },
+    {
+      "type": "ranking",
+      "rows": [
+        {
+          "offer": {
+            "supplierId": "envases-sur",
+            "unitPriceCents": 22800,
+            "deliveryDays": 5,
+            "round": 2
+          },
+          "decision": "needs_approval",
+          "totalCents": 11400000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 11400000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 5,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 11400000,
+              "limit": 8000000
+            }
+          ]
+        },
+        {
+          "offer": {
+            "supplierId": "descartables-ya",
+            "unitPriceCents": 22400,
+            "deliveryDays": 7,
+            "round": 1
+          },
+          "decision": "rejected",
+          "totalCents": 11200000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 11200000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": false,
+              "actual": 7,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 11200000,
+              "limit": 8000000
+            }
+          ]
+        },
+        {
+          "offer": {
+            "supplierId": "packnorte",
+            "unitPriceCents": 25600,
+            "deliveryDays": 4,
+            "round": 1
+          },
+          "decision": "rejected",
+          "totalCents": 12800000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": false,
+              "actual": 12800000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 4,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 12800000,
+              "limit": 8000000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "recommendation",
+      "supplierId": "envases-sur",
+      "explanation": "Envases Sur wins because they meet our strict 5-day delivery deadline at $228 per unit (totaling $114,000, well within our $120,000 budget). Descartables Ya offered a slightly lower price of $224 per unit, but their 7-day delivery timeline fails our maximum 5-day requirement. PackNorte complies with the delivery time in 4 days, but their price of $256 per unit exceeds our total budget.",
+      "forced": false
+    },
+    {
+      "type": "policy_result",
+      "supplierId": "envases-sur",
+      "result": {
+        "decision": "needs_approval",
+        "totalCents": 11400000,
+        "checks": [
+          {
+            "rule": "budget",
+            "passed": true,
+            "actual": 11400000,
+            "limit": 12000000
+          },
+          {
+            "rule": "delivery",
+            "passed": true,
+            "actual": 5,
+            "limit": 5
+          },
+          {
+            "rule": "supplier_allowed",
+            "passed": true
+          },
+          {
+            "rule": "auto_limit",
+            "passed": false,
+            "actual": 11400000,
+            "limit": 8000000
+          }
+        ]
+      }
+    }
+  ]
+}

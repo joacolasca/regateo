@@ -16,8 +16,12 @@ function retryDelayMs(error: unknown): number | null {
 export class GeminiLLM implements LLM {
   private ai: GoogleGenAI;
 
-  constructor(apiKey: string, private model: string) {
+  private patient: boolean;
+
+  /** patient: ante un límite por minuto, esperar y reintentar (scripts). En el sitio se corta enseguida. */
+  constructor(apiKey: string, private model: string, options: { patient?: boolean } = {}) {
     this.ai = new GoogleGenAI({ apiKey });
+    this.patient = options.patient ?? true;
   }
 
   async generateJson<T>(req: LLMRequest<T>): Promise<T> {
@@ -39,6 +43,7 @@ export class GeminiLLM implements LLM {
         if (process.env.LLM_DEBUG) console.error('[gemini]', String(error).slice(0, 300));
         const wait = retryDelayMs(error);
         if (wait === null && attempt >= 1) break;
+        if (wait !== null && !this.patient) break;
         if (wait !== null) await sleep(wait);
       }
     }

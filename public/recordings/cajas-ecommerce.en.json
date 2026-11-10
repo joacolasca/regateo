@@ -1,0 +1,240 @@
+{
+  "scenarioId": "cajas-ecommerce",
+  "lang": "en",
+  "model": "gemini-3.5-flash-lite",
+  "recordedAt": "2026-11-10T18:21:17.905Z",
+  "events": [
+    {
+      "type": "run_started",
+      "request": {
+        "product": "corrugated cardboard boxes 30x20x15 cm",
+        "quantity": 2000,
+        "deadlineDays": 10,
+        "budgetCents": 90000000
+      },
+      "policy": {
+        "maxTotalCents": 90000000,
+        "autoApproveUpToCents": 100000000,
+        "maxDeliveryDays": 10,
+        "blockedSupplierIds": [
+          "cartonera-oeste"
+        ]
+      },
+      "suppliers": [
+        {
+          "id": "cartonera-oeste",
+          "name": "Cartonera Oeste"
+        },
+        {
+          "id": "embalajes-rio",
+          "name": "Embalajes Río"
+        },
+        {
+          "id": "corrugados-delta",
+          "name": "Corrugados Delta"
+        }
+      ]
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "embalajes-rio",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hello, we need a quote for 2000 corrugated cardboard boxes (30x20x15 cm) with delivery in a maximum of 10 days. Our budget is $900000. Please let us know your best price and delivery time."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "embalajes-rio",
+      "text": "Hi there! Thanks for reaching out to Embalajes Río. For 2000 units of our 30x20x15 cm corrugated boxes, our standard price is $440 each, and we can easily deliver them in 9 days. Let me know if that works for you!",
+      "offer": {
+        "supplierId": "embalajes-rio",
+        "unitPriceCents": 44000,
+        "deliveryDays": 9,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "corrugados-delta",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hello, we need a quote for 2000 corrugated cardboard boxes (30x20x15 cm) with delivery in a maximum of 10 days. Our budget is $900000. Please let us know your best price and delivery time."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "corrugados-delta",
+      "text": "We can supply 2000 units of 30x20x15 cm corrugated boxes at $465 per unit. Standard delivery takes 8 days.",
+      "offer": {
+        "supplierId": "corrugados-delta",
+        "unitPriceCents": 46500,
+        "deliveryDays": 8,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "embalajes-rio",
+      "tool": "counter_offer",
+      "round": 2,
+      "text": "Hello. We have another quote at $465 per unit, but your price of $440 is better and fits well within our $900000 budget. Since we need 2000 units, could you improve your price to $420 per unit to close the deal today?"
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "embalajes-rio",
+      "text": "Thanks for sharing that! Since you're ordering 2000 units and want to close today, I can offer you a nice volume discount down to $435 per unit. We can still keep the 9-day delivery. How does that sound?",
+      "offer": {
+        "supplierId": "embalajes-rio",
+        "unitPriceCents": 43500,
+        "deliveryDays": 9,
+        "round": 2
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "corrugados-delta",
+      "tool": "counter_offer",
+      "round": 2,
+      "text": "Hello. We received another quote of $435 per unit with a 9-day delivery. Since your delivery is 8 days, could you match or improve the $435 price for 2000 units?"
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "corrugados-delta",
+      "text": "Look, $435 is too tight, but since you are buying 2000 units and need them in 8 days, we can do $450 per unit. Delivery in 8 days as always.",
+      "offer": {
+        "supplierId": "corrugados-delta",
+        "unitPriceCents": 45000,
+        "deliveryDays": 8,
+        "round": 2
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "embalajes-rio",
+      "tool": "counter_offer",
+      "round": 3,
+      "text": "Hi! Your price of $435 per unit is good and fits our $900000 budget, but we received another offer at $450 with an 8-day delivery. If you can match that 8-day delivery time, we can close the deal right now at your $435 price."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "embalajes-rio",
+      "text": "Hello again! I appreciate you being upfront about the delivery time. Since you are closing today and need them fast, I can match that 8-day delivery for you, keeping the price at $435 each ($870,000 total). Let me know if we are good to go!",
+      "offer": {
+        "supplierId": "embalajes-rio",
+        "unitPriceCents": 43500,
+        "deliveryDays": 8,
+        "round": 3
+      }
+    },
+    {
+      "type": "ranking",
+      "rows": [
+        {
+          "offer": {
+            "supplierId": "embalajes-rio",
+            "unitPriceCents": 43500,
+            "deliveryDays": 8,
+            "round": 3
+          },
+          "decision": "auto",
+          "totalCents": 87000000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 87000000,
+              "limit": 90000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 8,
+              "limit": 10
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": true,
+              "actual": 87000000,
+              "limit": 100000000
+            }
+          ]
+        },
+        {
+          "offer": {
+            "supplierId": "corrugados-delta",
+            "unitPriceCents": 45000,
+            "deliveryDays": 8,
+            "round": 2
+          },
+          "decision": "auto",
+          "totalCents": 90000000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 90000000,
+              "limit": 90000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 8,
+              "limit": 10
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": true,
+              "actual": 90000000,
+              "limit": 100000000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "recommendation",
+      "supplierId": "embalajes-rio",
+      "explanation": "Embalajes Río wins the deal because their final price of $435 per unit ($870000 total) fits well within our $900000 budget and they matched the required 8-day delivery time. Corrugados Delta loses because their best price was higher at $450 per unit ($900000 total). Cartonera Oeste was blocked and excluded from consideration.",
+      "forced": false
+    },
+    {
+      "type": "policy_result",
+      "supplierId": "embalajes-rio",
+      "result": {
+        "decision": "auto",
+        "totalCents": 87000000,
+        "checks": [
+          {
+            "rule": "budget",
+            "passed": true,
+            "actual": 87000000,
+            "limit": 90000000
+          },
+          {
+            "rule": "delivery",
+            "passed": true,
+            "actual": 8,
+            "limit": 10
+          },
+          {
+            "rule": "supplier_allowed",
+            "passed": true
+          },
+          {
+            "rule": "auto_limit",
+            "passed": true,
+            "actual": 87000000,
+            "limit": 100000000
+          }
+        ]
+      }
+    }
+  ]
+}

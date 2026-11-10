@@ -8,7 +8,7 @@ import { GeminiLLM } from '../src/core/gemini';
 import { featuredScenarios, getScenario } from '../src/core/scenarios';
 import type { Lang, Scenario } from '../src/core/types';
 
-const OUT = 'src/data/recordings';
+const OUT = 'public/recordings';
 const MAX_TRIES = 3;
 
 async function record(llm: GeminiLLM, model: string, scenario: Scenario, lang: Lang) {

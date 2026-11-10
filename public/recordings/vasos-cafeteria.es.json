@@ -1,0 +1,254 @@
+{
+  "scenarioId": "vasos-cafeteria",
+  "lang": "es",
+  "model": "gemini-3.5-flash-lite",
+  "recordedAt": "2026-11-10T18:18:10.928Z",
+  "events": [
+    {
+      "type": "run_started",
+      "request": {
+        "product": "vasos térmicos de 8 oz",
+        "quantity": 500,
+        "deadlineDays": 5,
+        "budgetCents": 12000000
+      },
+      "policy": {
+        "maxTotalCents": 12000000,
+        "autoApproveUpToCents": 8000000,
+        "maxDeliveryDays": 5,
+        "blockedSupplierIds": []
+      },
+      "suppliers": [
+        {
+          "id": "envases-sur",
+          "name": "Envases Sur"
+        },
+        {
+          "id": "descartables-ya",
+          "name": "Descartables Ya"
+        },
+        {
+          "id": "packnorte",
+          "name": "PackNorte"
+        }
+      ]
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "envases-sur",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hola, necesito cotización por 500 vasos térmicos de 8 oz. ¿Me pasás precio y disponibilidad para entregar en un plazo máximo de 5 días? Gracias."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "envases-sur",
+      "text": "Hola, ¿cómo va? Para 500 vasos de 8 oz el precio de lista es de $248 cada uno. Con el tema del plazo, en 6 días te los puedo despachar. ¿Lo cerramos así?",
+      "offer": {
+        "supplierId": "envases-sur",
+        "unitPriceCents": 24800,
+        "deliveryDays": 6,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "descartables-ya",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hola, necesito cotizar 500 vasos térmicos de 8 oz. ¿Me decís precio y si llegás a entregar en 5 días como máximo? Gracias."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "descartables-ya",
+      "text": "¡Hola, cómo andás! Qué temita el de los plazos, mira, para esos 500 vasitos térmicos de 8 oz te puedo hacer un precio increíble de $224 cada uno, somos los más baratos del mercado, olvidate. Eso sí, bajarte a 5 días imposible, la logística me mata, te los estoy mandando en 7 días clavados. ¿Te sirve?",
+      "offer": {
+        "supplierId": "descartables-ya",
+        "unitPriceCents": 22400,
+        "deliveryDays": 7,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "packnorte",
+      "tool": "request_quote",
+      "round": 1,
+      "text": "Hola, necesito cotización por 500 vasos térmicos de 8 oz. ¿Me pasás precio y disponibilidad para entrega en un máximo de 5 días? Gracias."
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "packnorte",
+      "text": "Estimado, el valor por unidad para los 500 vasos térmicos de 8 oz es de $256 y la entrega se realiza en el plazo estándar de 4 días hábiles.",
+      "offer": {
+        "supplierId": "packnorte",
+        "unitPriceCents": 25600,
+        "deliveryDays": 4,
+        "round": 1
+      }
+    },
+    {
+      "type": "agent_message",
+      "supplierId": "envases-sur",
+      "tool": "counter_offer",
+      "round": 2,
+      "text": "Hola, ¿cómo va? Necesito los 500 vasos en 5 días como máximo y me ofrecés 6 días. Además, tengo otra oferta por $224 cada uno, aunque tardan 7 días. Si me los dejás a $220 cada uno y me cumplís con la entrega en 5 días, te los compro a vos. ¿Te va?"
+    },
+    {
+      "type": "supplier_message",
+      "supplierId": "envases-sur",
+      "text": "Mirá, a $220 no llego ni loco porque pierdo plata. Si me cerrás ahora mismo, te los dejo a $225 cada uno y te hago la gamba con los 5 días de entrega. ¿Hacemos negocio?",
+      "offer": {
+        "supplierId": "envases-sur",
+        "unitPriceCents": 22500,
+        "deliveryDays": 5,
+        "round": 2
+      }
+    },
+    {
+      "type": "ranking",
+      "rows": [
+        {
+          "offer": {
+            "supplierId": "envases-sur",
+            "unitPriceCents": 22500,
+            "deliveryDays": 5,
+            "round": 2
+          },
+          "decision": "needs_approval",
+          "totalCents": 11250000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 11250000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 5,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 11250000,
+              "limit": 8000000
+            }
+          ]
+        },
+        {
+          "offer": {
+            "supplierId": "descartables-ya",
+            "unitPriceCents": 22400,
+            "deliveryDays": 7,
+            "round": 1
+          },
+          "decision": "rejected",
+          "totalCents": 11200000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": true,
+              "actual": 11200000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": false,
+              "actual": 7,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 11200000,
+              "limit": 8000000
+            }
+          ]
+        },
+        {
+          "offer": {
+            "supplierId": "packnorte",
+            "unitPriceCents": 25600,
+            "deliveryDays": 4,
+            "round": 1
+          },
+          "decision": "rejected",
+          "totalCents": 12800000,
+          "checks": [
+            {
+              "rule": "budget",
+              "passed": false,
+              "actual": 12800000,
+              "limit": 12000000
+            },
+            {
+              "rule": "delivery",
+              "passed": true,
+              "actual": 4,
+              "limit": 5
+            },
+            {
+              "rule": "supplier_allowed",
+              "passed": true
+            },
+            {
+              "rule": "auto_limit",
+              "passed": false,
+              "actual": 12800000,
+              "limit": 8000000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "recommendation",
+      "supplierId": "envases-sur",
+      "explanation": "Envases Sur es la mejor opción porque cumple exactamente con el plazo límite de 5 días requerido por la empresa y accedió a bajarnos el precio a $225 por unidad, quedando dentro de nuestro presupuesto total de $120000. Descartables Ya es más barato a $224 pero demora 7 días, incumpliendo la fecha de entrega. PackNorte cumple con los plazos (4 días) pero su precio de $256 por unidad se pasa demasiado del presupuesto.",
+      "forced": false
+    },
+    {
+      "type": "policy_result",
+      "supplierId": "envases-sur",
+      "result": {
+        "decision": "needs_approval",
+        "totalCents": 11250000,
+        "checks": [
+          {
+            "rule": "budget",
+            "passed": true,
+            "actual": 11250000,
+            "limit": 12000000
+          },
+          {
+            "rule": "delivery",
+            "passed": true,
+            "actual": 5,
+            "limit": 5
+          },
+          {
+            "rule": "supplier_allowed",
+            "passed": true
+          },
+          {
+            "rule": "auto_limit",
+            "passed": false,
+            "actual": 11250000,
+            "limit": 8000000
+          }
+        ]
+      }
+    }
+  ]
+}
