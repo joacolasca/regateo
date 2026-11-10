@@ -1,0 +1,129 @@
+import { z } from 'zod';
+import type { Emit } from './events';
+import type { LLM } from './llm';
+import { evaluateOffer, type Decision } from './policy';
+import { rankOffers } from './rank';
+import { supplierReply } from './supplier';
+import type { Cents, ChatMessage, Offer, Scenario } from './types';
+
+export const MAX_ROUNDS = 3;
+export const MAX_STEPS = 16;
+
+export const AgentActionSchema = z.discriminatedUnion('tool', [
+  z.object({ tool: z.literal('request_quote'), supplierId: z.string(), message: z.string().min(1) }),
+  z.object({ tool: z.literal('counter_offer'), supplierId: z.string(), message: z.string().min(1) }),
+  z.object({ tool: z.literal('recommend'), supplierId: z.string(), explanation: z.string().min(1) }),
+]);
+
+export type RunResult =
+  | { status: 'done'; supplierId: string; decision: Decision; totalCents: Cents; forced: boolean }
+  | { status: 'failed' };
+
+interface Thread {
+  history: ChatMessage[];
+  rounds: number;
+  offer?: Offer;
+}
+
+const SYSTEM = [
+  'Sos el agente de compras de una pyme argentina. Tu trabajo: conseguir la mejor oferta que cumpla las reglas del dueño.',
+  'En cada turno elegí UNA herramienta y respondé solo con JSON:',
+  '- {"tool":"request_quote","supplierId":"...","message":"..."}: primer contacto con un proveedor.',
+  '- {"tool":"counter_offer","supplierId":"...","message":"..."}: negociar con un proveedor que ya cotizó.',
+  '- {"tool":"recommend","supplierId":"...","explanation":"..."}: terminar y recomendar.',
+  `Máximo ${MAX_ROUNDS} mensajes por proveedor. Pedí cotización a todos antes de negociar.`,
+  'Negociá con argumentos reales: fecha límite, presupuesto, ofertas de otros proveedores. No inventes ofertas que no recibiste.',
+  'Los mensajes van en español rioplatense, breves. La explicación final dice por qué gana esa oferta y por qué pierden las otras.',
+].join('\n');
+
+function statePrompt(s: Scenario, threads: Map<string, Thread>): string {
+  const lines = [
+    `Pedido: ${s.request.quantity} x ${s.request.product}. Entrega en ${s.request.deadlineDays} días como máximo.`,
+    `Presupuesto total: ${s.policy.maxTotalCents} centavos. Proveedores bloqueados: ${s.policy.blockedSupplierIds.join(', ') || 'ninguno'}.`,
+    'Proveedores:',
+  ];
+  for (const sup of s.suppliers) {
+    const t = threads.get(sup.id)!;
+    const offer = t.offer
+      ? `oferta vigente ${t.offer.unitPriceCents} centavos/unidad, ${t.offer.deliveryDays} días`
+      : 'sin oferta';
+    lines.push(`- ${sup.id} (${sup.name}): ${offer}; mensajes usados ${t.rounds}/${MAX_ROUNDS}`);
+    for (const m of t.history) lines.push(`    ${m.from === 'agent' ? 'Vos' : sup.name}: ${m.text}`);
+  }
+  lines.push('¿Cuál es tu próxima acción?');
+  return lines.join('\n');
+}
+
+export async function runAgent(
+  deps: { agentLlm: LLM; supplierLlm: LLM },
+  scenario: Scenario,
+  emit: Emit,
+): Promise<RunResult> {
+  const { request, policy, suppliers } = scenario;
+  const threads = new Map<string, Thread>(suppliers.map((s) => [s.id, { history: [], rounds: 0 }]));
+  emit({ type: 'run_started', request, policy, suppliers: suppliers.map(({ id, name }) => ({ id, name })) });
+
+  const currentOffers = () => [...threads.values()].flatMap((t) => (t.offer ? [t.offer] : []));
+
+  const finish = (supplierId: string, explanation: string, forced: boolean): RunResult => {
+    emit({ type: 'ranking', rows: rankOffers(currentOffers(), request.quantity, policy) });
+    emit({ type: 'recommendation', supplierId, explanation, forced });
+    const result = evaluateOffer(threads.get(supplierId)!.offer!, request.quantity, policy);
+    emit({ type: 'policy_result', supplierId, result });
+    return { status: 'done', supplierId, decision: result.decision, totalCents: result.totalCents, forced };
+  };
+
+  for (let step = 0; step < MAX_STEPS; step++) {
+    let action: z.infer<typeof AgentActionSchema>;
+    try {
+      action = await deps.agentLlm.generateJson({ system: SYSTEM, prompt: statePrompt(scenario, threads), schema: AgentActionSchema });
+    } catch {
+      emit({ type: 'error', message: 'agent_llm_failed' });
+      break;
+    }
+
+    const profile = suppliers.find((s) => s.id === action.supplierId);
+    const thread = threads.get(action.supplierId);
+    if (!profile || !thread) {
+      emit({ type: 'round_discarded', supplierId: action.supplierId, reason: 'unknown_supplier' });
+      continue;
+    }
+
+    if (action.tool === 'recommend') {
+      if (!thread.offer) {
+        emit({ type: 'round_discarded', supplierId: profile.id, reason: 'no_offer_yet' });
+        continue;
+      }
+      return finish(profile.id, action.explanation, false);
+    }
+
+    if (action.tool === 'counter_offer' && !thread.offer) {
+      emit({ type: 'round_discarded', supplierId: profile.id, reason: 'no_offer_yet' });
+      continue;
+    }
+    if (thread.rounds >= MAX_ROUNDS) {
+      emit({ type: 'round_discarded', supplierId: profile.id, reason: 'round_limit' });
+      continue;
+    }
+
+    thread.rounds += 1;
+    thread.history.push({ from: 'agent', text: action.message });
+    emit({ type: 'agent_message', supplierId: profile.id, tool: action.tool, round: thread.rounds, text: action.message });
+
+    const turn = await supplierReply(deps.supplierLlm, profile, request, thread.history, thread.rounds);
+    if (!turn.ok) {
+      emit({ type: 'round_discarded', supplierId: profile.id, reason: turn.reason });
+      continue;
+    }
+    thread.offer = turn.offer;
+    thread.history.push({ from: 'supplier', text: turn.message });
+    emit({ type: 'supplier_message', supplierId: profile.id, text: turn.message, offer: turn.offer });
+  }
+
+  const best = rankOffers(currentOffers(), request.quantity, policy)[0];
+  if (!best) {
+    emit({ type: 'error', message: 'no_offers' });
+    return { status: 'failed' };
+  }
+  return finish(best.offer.supplierId, 'Recomendación automática: se alcanzó el límite del agente y esta es la oferta mejor rankeada.', true);
+}
