@@ -32,6 +32,9 @@ const systemPrompt = (lang: Lang) => [
   '- {"tool":"counter_offer","supplierId":"...","message":"..."}: negociar con un proveedor que ya cotizó.',
   '- {"tool":"recommend","supplierId":"...","explanation":"..."}: terminar y recomendar.',
   `Máximo ${MAX_ROUNDS} mensajes por proveedor. Pedí cotización a todos antes de negociar.`,
+  'Cada oferta vigente viene marcada CUMPLE o NO CUMPLE según las reglas del dueño. Recomendá solo una oferta marcada CUMPLE.',
+  'Si una oferta NO CUMPLE, negociá justo lo que falla (precio o plazo) mientras te queden mensajes con ese proveedor.',
+  'Entre las ofertas que cumplen, intentá bajar el precio antes de recomendar. Si ninguna cumple y no quedan mensajes, recomendá la más cercana a cumplir y decilo.',
   'Negociá con argumentos reales: fecha límite, presupuesto, ofertas de otros proveedores. No inventes ofertas que no recibiste.',
   'En los mensajes y en la explicación hablá siempre en pesos (centavos dividido 100: 24500 centavos son $245). Nunca escribas la palabra "centavos".',
   'Los mensajes son breves. La explicación final dice por qué gana esa oferta y por qué pierden las otras.',
@@ -39,6 +42,18 @@ const systemPrompt = (lang: Lang) => [
     ? 'Write every message and the final explanation in natural business English. Amounts stay in Argentine pesos.'
     : 'Escribí los mensajes y la explicación en español rioplatense.',
 ].join('\n');
+
+// El agente no adivina si una oferta cumple: recibe el resultado que calcula el servidor.
+function ruleStatus(offer: Offer, s: Scenario): string {
+  const { checks, totalCents } = evaluateOffer(offer, s.request.quantity, s.policy);
+  const problems = checks.flatMap((c) => {
+    if (c.passed || c.rule === 'auto_limit') return [];
+    if (c.rule === 'budget') return [`supera el presupuesto (total ${totalCents} > ${c.limit} centavos)`];
+    if (c.rule === 'delivery') return [`llega tarde (${c.actual} > ${c.limit} días)`];
+    return ['proveedor bloqueado'];
+  });
+  return problems.length ? `NO CUMPLE: ${problems.join('; ')}` : `CUMPLE las reglas (total ${totalCents} centavos)`;
+}
 
 function statePrompt(s: Scenario, threads: Map<string, Thread>): string {
   const lines = [
@@ -49,7 +64,7 @@ function statePrompt(s: Scenario, threads: Map<string, Thread>): string {
   for (const sup of s.suppliers) {
     const t = threads.get(sup.id)!;
     const offer = t.offer
-      ? `oferta vigente ${t.offer.unitPriceCents} centavos/unidad, ${t.offer.deliveryDays} días`
+      ? `oferta vigente ${t.offer.unitPriceCents} centavos/unidad, ${t.offer.deliveryDays} días → ${ruleStatus(t.offer, s)}`
       : 'sin oferta';
     lines.push(`- ${sup.id} (${sup.name}): ${offer}; mensajes usados ${t.rounds}/${MAX_ROUNDS}`);
     for (const m of t.history) lines.push(`    ${m.from === 'agent' ? 'Vos' : sup.name}: ${m.text}`);

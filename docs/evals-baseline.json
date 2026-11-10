@@ -1,0 +1,100 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "ranAt": "2026-11-10T18:28:12.404Z",
+  "runsPerScenario": 3,
+  "summary": {
+    "runs": 4,
+    "completedRate": 1,
+    "feasibleRate": 0.25,
+    "topRankedRate": 0.5,
+    "optimalSupplierRate": 0.25,
+    "forcedRate": 0.25,
+    "avgMarginCaptured": 0.05555555555555555,
+    "avgAgentMessages": 4.25,
+    "totalSavedCents": 2000000
+  },
+  "byScenario": [
+    {
+      "scenarioId": "vasos-cafeteria",
+      "summary": {
+        "runs": 3,
+        "completedRate": 1,
+        "feasibleRate": 0,
+        "topRankedRate": 0.3333333333333333,
+        "optimalSupplierRate": 0,
+        "forcedRate": 0,
+        "avgMarginCaptured": 0,
+        "avgAgentMessages": 4.666666666666667,
+        "totalSavedCents": 0
+      }
+    },
+    {
+      "scenarioId": "cajas-ecommerce",
+      "summary": {
+        "runs": 1,
+        "completedRate": 1,
+        "feasibleRate": 1,
+        "topRankedRate": 1,
+        "optimalSupplierRate": 1,
+        "forcedRate": 1,
+        "avgMarginCaptured": 0.2222222222222222,
+        "avgAgentMessages": 3,
+        "totalSavedCents": 2000000
+      }
+    }
+  ],
+  "scores": [
+    {
+      "scenarioId": "vasos-cafeteria",
+      "completed": true,
+      "feasible": false,
+      "pickedTopRanked": false,
+      "pickedOptimalSupplier": false,
+      "forced": false,
+      "discardedRounds": 0,
+      "agentMessages": 4,
+      "savedCents": 0,
+      "marginCaptured": 0,
+      "totalCents": 12700000
+    },
+    {
+      "scenarioId": "vasos-cafeteria",
+      "completed": true,
+      "feasible": false,
+      "pickedTopRanked": true,
+      "pickedOptimalSupplier": false,
+      "forced": false,
+      "discardedRounds": 1,
+      "agentMessages": 6,
+      "savedCents": 0,
+      "marginCaptured": 0,
+      "totalCents": 11100000
+    },
+    {
+      "scenarioId": "vasos-cafeteria",
+      "completed": true,
+      "feasible": false,
+      "pickedTopRanked": false,
+      "pickedOptimalSupplier": false,
+      "forced": false,
+      "discardedRounds": 0,
+      "agentMessages": 4,
+      "savedCents": 0,
+      "marginCaptured": 0,
+      "totalCents": 12400000
+    },
+    {
+      "scenarioId": "cajas-ecommerce",
+      "completed": true,
+      "feasible": true,
+      "pickedTopRanked": true,
+      "pickedOptimalSupplier": true,
+      "forced": true,
+      "discardedRounds": 0,
+      "agentMessages": 3,
+      "savedCents": 2000000,
+      "marginCaptured": 0.2222222222222222,
+      "totalCents": 86000000
+    }
+  ]
+}

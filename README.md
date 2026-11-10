@@ -4,7 +4,7 @@
 
 *An agent that negotiates purchases for a small business: it requests quotes, haggles with each supplier, compares the offers and recommends one. The owner's rules are enforced by server code, never by the model. The site is available in Spanish and English.*
 
-**Demo:** DEMO_URL
+**Demo:** https://regateo.vercel.app · [English](https://regateo.vercel.app/?lang=en)
 
 ![Mesa de control de Regateo](docs/screenshot.jpg)
 

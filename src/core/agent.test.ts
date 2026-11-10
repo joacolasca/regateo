@@ -105,4 +105,20 @@ describe('runAgent', () => {
     expect(events.at(-1)).toEqual({ type: 'error', message: 'no_offers' });
     expect(result).toEqual({ status: 'failed' });
   });
+
+  it('le muestra al agente si cada oferta cumple las reglas, calculado por el servidor', async () => {
+    const agentLlm = new ScriptedLLM([
+      { tool: 'request_quote', supplierId: 's1', message: '¿Precio?' },
+      { tool: 'request_quote', supplierId: 's2', message: '¿Precio?' },
+      { tool: 'recommend', supplierId: 's1', explanation: 'x' },
+    ]);
+    const supplierLlm = new ScriptedLLM([
+      { message: '$240, el lunes.', unitPriceCents: 24_000, deliveryDays: 5 },
+      { message: '$255, en una semana.', unitPriceCents: 25_500, deliveryDays: 7 },
+    ]);
+    await runAgent({ agentLlm, supplierLlm }, scenario, () => {});
+    const lastPrompt = agentLlm.calls.at(-1)!.prompt;
+    expect(lastPrompt).toContain('NO CUMPLE: supera el presupuesto (total 12750000 > 12000000 centavos); llega tarde (7 > 5 días)');
+    expect(lastPrompt).toContain('CUMPLE las reglas (total 12000000 centavos)');
+  });
 });
