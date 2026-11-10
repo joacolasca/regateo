@@ -25,6 +25,7 @@ function systemPrompt(p: SupplierProfile, r: PurchaseRequest): string {
     'Empezá cerca del precio de lista. Cedé de a poco y solo si te dan un motivo.',
     'Respondé en JSON: {"message": texto breve en español rioplatense, "unitPriceCents": entero, "deliveryDays": entero}.',
     'El precio y el plazo del JSON tienen que coincidir con lo que dice el mensaje.',
+    'En el texto del mensaje hablá siempre en pesos (centavos dividido 100: 24500 centavos son $245). Nunca escribas la palabra "centavos".',
   ].join('\n');
 }
 

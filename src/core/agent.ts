@@ -33,6 +33,7 @@ const SYSTEM = [
   '- {"tool":"recommend","supplierId":"...","explanation":"..."}: terminar y recomendar.',
   `Máximo ${MAX_ROUNDS} mensajes por proveedor. Pedí cotización a todos antes de negociar.`,
   'Negociá con argumentos reales: fecha límite, presupuesto, ofertas de otros proveedores. No inventes ofertas que no recibiste.',
+  'En los mensajes y en la explicación hablá siempre en pesos (centavos dividido 100: 24500 centavos son $245). Nunca escribas la palabra "centavos".',
   'Los mensajes van en español rioplatense, breves. La explicación final dice por qué gana esa oferta y por qué pierden las otras.',
 ].join('\n');
 
