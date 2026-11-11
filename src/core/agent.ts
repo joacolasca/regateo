@@ -131,10 +131,15 @@ export async function runAgent(
       // se rechaza la acción y el agente vuelve a elegir. Se permite una sola vez por corrida.
       const breaks = evaluateOffer(thread.offer, request.quantity, policy).decision === 'rejected';
       const compliantExists = currentOffers().some((o) => evaluateOffer(o, request.quantity, policy).decision !== 'rejected');
-      if (breaks && compliantExists && !rejectedRecommendation) {
+      const canKeepNegotiating = [...threads.entries()].filter(([, t]) => t.offer && t.rounds < MAX_ROUNDS).map(([id]) => id);
+      if (breaks && (compliantExists || canKeepNegotiating.length > 0) && !rejectedRecommendation) {
         rejectedRecommendation = true;
-        emit({ type: 'round_discarded', supplierId: profile.id, reason: 'breaks_rules' });
-        notes.push(`El servidor rechazó tu recomendación de ${profile.id}: esa oferta NO CUMPLE las reglas y hay otra que sí. Elegí una oferta marcada CUMPLE.`);
+        emit({ type: 'round_discarded', supplierId: profile.id, reason: compliantExists ? 'breaks_rules' : 'keep_negotiating' });
+        notes.push(
+          compliantExists
+            ? `El servidor rechazó tu recomendación de ${profile.id}: esa oferta NO CUMPLE las reglas y hay otra que sí. Elegí una oferta marcada CUMPLE.`
+            : `El servidor rechazó tu recomendación de ${profile.id}: ninguna oferta cumple todavía y te quedan mensajes con ${canKeepNegotiating.join(', ')}. Seguí negociando lo que falla (precio o plazo) antes de recomendar.`,
+        );
         continue;
       }
       return finish(profile.id, action.explanation, false);

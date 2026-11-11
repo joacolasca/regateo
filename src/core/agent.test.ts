@@ -186,4 +186,21 @@ describe('runAgent', () => {
     const result = await runAgent({ agentLlm, supplierLlm }, scenario, () => {});
     expect(result).toMatchObject({ status: 'done', supplierId: 's2', decision: 'rejected' });
   });
+
+  it('si ninguna oferta cumple y quedan mensajes, lo manda a seguir negociando', async () => {
+    const agentLlm = new ScriptedLLM([
+      { tool: 'request_quote', supplierId: 's1', message: '¿Precio?' },
+      { tool: 'recommend', supplierId: 's1', explanation: 'es lo que hay' },
+      { tool: 'counter_offer', supplierId: 's1', message: 'Necesito $240 para entrar en presupuesto.' },
+      { tool: 'recommend', supplierId: 's1', explanation: 'ahora cumple' },
+    ]);
+    const supplierLlm = new ScriptedLLM([
+      { message: '$245, el lunes.', unitPriceCents: 24_500, deliveryDays: 5 },
+      { message: 'Dale, $240.', unitPriceCents: 24_000, deliveryDays: 5 },
+    ]);
+    const events: RunEvent[] = [];
+    const result = await runAgent({ agentLlm, supplierLlm }, scenario, (e) => events.push(e));
+    expect(events).toContainEqual({ type: 'round_discarded', supplierId: 's1', reason: 'keep_negotiating' });
+    expect(result).toMatchObject({ status: 'done', supplierId: 's1', decision: 'needs_approval', totalCents: 12_000_000 });
+  });
 });

@@ -3,7 +3,7 @@ import type { RankRow } from './rank';
 import type { DiscardReason } from './supplier';
 import type { Offer, Policy, PurchaseRequest } from './types';
 
-export type AgentDiscardReason = DiscardReason | 'round_limit' | 'no_offer_yet' | 'unknown_supplier' | 'breaks_rules';
+export type AgentDiscardReason = DiscardReason | 'round_limit' | 'no_offer_yet' | 'unknown_supplier' | 'breaks_rules' | 'keep_negotiating';
 
 export type RunEvent =
   | { type: 'run_started'; request: PurchaseRequest; policy: Policy; suppliers: { id: string; name: string }[] }
