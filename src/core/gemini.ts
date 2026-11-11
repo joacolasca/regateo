@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { LLM, LLMRequest, LLMUsage } from './llm';
 
 const MAX_ATTEMPTS = 4;
+export const CALL_TIMEOUT_MS = 30_000;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export type GeminiFailure =
@@ -17,6 +18,7 @@ export function classifyError(error: unknown): GeminiFailure {
   if (/API key not valid|API_KEY_INVALID|"code":\s*(401|403)/.test(text)) return { kind: 'auth' };
   if (/"code":\s*404|PerDay|no longer available|not found for API/i.test(text)) return { kind: 'exhausted' };
   if (/"code":\s*503|UNAVAILABLE/.test(text)) return { kind: 'busy', waitMs: 2500 };
+  if (/TimeoutError|AbortError|aborted|timed out/i.test(text)) return { kind: 'busy', waitMs: 500 };
   if (/"code":\s*429|RESOURCE_EXHAUSTED/.test(text)) {
     const seconds = text.match(/retry in ([\d.]+)s/i)?.[1] ?? text.match(/"retryDelay":\s*"([\d.]+)s"/)?.[1];
     return { kind: 'rate', waitMs: Math.min(Math.ceil(Number(seconds ?? 30)) + 1, 65) * 1000 };
@@ -70,6 +72,8 @@ export class GeminiLLM implements LLM {
           config: {
             systemInstruction: `${req.system}\n\nRespondé únicamente con JSON válido que cumpla este JSON Schema:\n${schemaText}`,
             responseMimeType: 'application/json',
+            // Sin esto, una llamada colgada frena la corrida entera.
+            abortSignal: AbortSignal.timeout(CALL_TIMEOUT_MS),
           },
         });
         const parsed = req.schema.parse(JSON.parse(res.text ?? ''));
