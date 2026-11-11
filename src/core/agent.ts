@@ -93,6 +93,8 @@ export async function runAgent(
   const threads = new Map<string, Thread>(suppliers.map((s) => [s.id, { history: [], rounds: 0 }]));
   emit({ type: 'run_started', request, policy, suppliers: suppliers.map(({ id, name }) => ({ id, name })) });
 
+  const notes: string[] = [];
+  let rejectedRecommendation = false;
   const currentOffers = () => [...threads.values()].flatMap((t) => (t.offer ? [t.offer] : []));
 
   const finish = (supplierId: string, explanation: string, forced: boolean): RunResult => {
@@ -106,7 +108,7 @@ export async function runAgent(
   for (let step = 0; step < MAX_STEPS; step++) {
     let action: z.infer<typeof AgentActionSchema>;
     try {
-      action = await deps.agentLlm.generateJson({ system: systemPrompt(lang), prompt: statePrompt(localized, threads), schema: AgentActionSchema });
+      action = await deps.agentLlm.generateJson({ system: systemPrompt(lang), prompt: [statePrompt(localized, threads), ...notes.map((n) => `AVISO DEL SERVIDOR: ${n}`)].join('\n'), schema: AgentActionSchema });
     } catch {
       emit({ type: 'error', message: 'agent_llm_failed' });
       break;
@@ -123,6 +125,16 @@ export async function runAgent(
     if (action.tool === 'recommend') {
       if (!thread.offer) {
         emit({ type: 'round_discarded', supplierId: profile.id, reason: 'no_offer_yet' });
+        continue;
+      }
+      // Validación de la herramienta: si elige una oferta que rompe las reglas habiendo otra que cumple,
+      // se rechaza la acción y el agente vuelve a elegir. Se permite una sola vez por corrida.
+      const breaks = evaluateOffer(thread.offer, request.quantity, policy).decision === 'rejected';
+      const compliantExists = currentOffers().some((o) => evaluateOffer(o, request.quantity, policy).decision !== 'rejected');
+      if (breaks && compliantExists && !rejectedRecommendation) {
+        rejectedRecommendation = true;
+        emit({ type: 'round_discarded', supplierId: profile.id, reason: 'breaks_rules' });
+        notes.push(`El servidor rechazó tu recomendación de ${profile.id}: esa oferta NO CUMPLE las reglas y hay otra que sí. Elegí una oferta marcada CUMPLE.`);
         continue;
       }
       return finish(profile.id, action.explanation, false);
