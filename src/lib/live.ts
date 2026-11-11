@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GeminiLLM } from '../core/gemini';
+import { GeminiLLM, modelChain } from '../core/gemini';
 import { getScenario } from '../core/scenarios';
 import type { Scenario } from '../core/types';
 import { Throttle } from './throttle';
@@ -44,7 +44,7 @@ export function prepareRun(body: unknown, req: Request, options: { patient: bool
     : base.policy;
 
   const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-  if (!GEMINI_API_KEY || !GEMINI_MODEL) return { ok: false, status: 503, error: 'live_unavailable' };
+  if (!GEMINI_API_KEY) return { ok: false, status: 503, error: 'live_unavailable' };
 
   const visitor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (!throttle.allow(visitor)) return { ok: false, status: 429, error: 'rate_limited' };
@@ -53,6 +53,6 @@ export function prepareRun(body: unknown, req: Request, options: { patient: bool
     ok: true,
     scenario: { ...base, policy },
     lang: parsed.data.lang,
-    llm: new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL, options),
+    llm: new GeminiLLM(GEMINI_API_KEY, modelChain(GEMINI_MODEL), options),
   };
 }

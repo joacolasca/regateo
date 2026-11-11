@@ -22,6 +22,15 @@ export function classifyError(error: unknown): GeminiFailure {
   return { kind: 'other' };
 }
 
+/** Modelos con capa gratuita que se agregan como respaldo a lo que diga GEMINI_MODEL. */
+export const FALLBACK_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
+
+/** La cadena configurada, seguida de los respaldos que falten. */
+export function modelChain(configured: string | undefined): string[] {
+  const chain = (configured ?? '').split(',').map((m) => m.trim()).filter(Boolean);
+  return [...new Set([...chain, ...FALLBACK_MODELS])];
+}
+
 /**
  * Adaptador de Gemini con salida JSON validada.
  * `models` es una cadena de respaldo: si un modelo agota su cuota diaria, se usa el siguiente.

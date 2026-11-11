@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { runAgent } from '../src/core/agent';
 import { scoreRun } from '../src/core/evals';
 import type { RunEvent } from '../src/core/events';
-import { GeminiLLM } from '../src/core/gemini';
+import { GeminiLLM, modelChain } from '../src/core/gemini';
 import { featuredScenarios, getScenario } from '../src/core/scenarios';
 import type { Lang, Scenario } from '../src/core/types';
 
@@ -33,12 +33,12 @@ async function record(llm: GeminiLLM, scenario: Scenario, lang: Lang) {
 
 async function main() {
   const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-  if (!GEMINI_API_KEY || !GEMINI_MODEL) throw new Error('Faltan GEMINI_API_KEY o GEMINI_MODEL en .env.local');
+  if (!GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY en .env.local');
   const [onlyId, onlyLang] = process.argv.slice(2);
   const list = onlyId ? [getScenario(onlyId)].filter((s): s is Scenario => Boolean(s)) : featuredScenarios;
   const langs: Lang[] = onlyLang === 'es' || onlyLang === 'en' ? [onlyLang] : ['es', 'en'];
   mkdirSync(OUT, { recursive: true });
-  const llm = new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL);
+  const llm = new GeminiLLM(GEMINI_API_KEY, modelChain(GEMINI_MODEL));
   let failed = 0;
   for (const scenario of list) for (const lang of langs) if (!(await record(llm, scenario, lang))) failed++;
   if (failed) throw new Error(`${failed} grabaciones no se pudieron completar`);

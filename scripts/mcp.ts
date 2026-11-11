@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { runAgent } from '../src/core/agent';
 import { scoreRun } from '../src/core/evals';
 import type { RunEvent } from '../src/core/events';
-import { GeminiLLM } from '../src/core/gemini';
+import { GeminiLLM, modelChain } from '../src/core/gemini';
 import { evaluateOffer } from '../src/core/policy';
 import { getScenario, scenarios } from '../src/core/scenarios';
 
@@ -65,9 +65,9 @@ server.registerTool(
     const base = getScenario(scenarioId);
     if (!base) return { ...text({ error: 'unknown_scenario' }), isError: true };
     const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-    if (!GEMINI_API_KEY || !GEMINI_MODEL) return { ...text({ error: 'Faltan GEMINI_API_KEY o GEMINI_MODEL' }), isError: true };
+    if (!GEMINI_API_KEY) return { ...text({ error: 'Falta GEMINI_API_KEY' }), isError: true };
     const scenario = { ...base, policy: policy ?? base.policy };
-    const llm = new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL);
+    const llm = new GeminiLLM(GEMINI_API_KEY, modelChain(GEMINI_MODEL));
     const events: RunEvent[] = [];
     const result = await runAgent({ agentLlm: llm, supplierLlm: llm }, scenario, (e) => events.push(e), lang);
     const recommendation = events.find((e) => e.type === 'recommendation');

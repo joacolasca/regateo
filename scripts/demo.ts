@@ -1,6 +1,6 @@
 import { runAgent } from '../src/core/agent';
 import type { RunEvent } from '../src/core/events';
-import { GeminiLLM } from '../src/core/gemini';
+import { GeminiLLM, modelChain } from '../src/core/gemini';
 import { getScenario, scenarios } from '../src/core/scenarios';
 
 const pesos = (cents: number) => `$${(cents / 100).toLocaleString('es-AR')}`;
@@ -33,10 +33,10 @@ function print(e: RunEvent) {
 
 async function main() {
   const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-  if (!GEMINI_API_KEY || !GEMINI_MODEL) throw new Error('Faltan GEMINI_API_KEY o GEMINI_MODEL en .env.local');
+  if (!GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY en .env.local');
   const scenario = getScenario(process.argv[2] ?? scenarios[0].id);
   if (!scenario) throw new Error(`Escenario desconocido. Opciones: ${scenarios.map((s) => s.id).join(', ')}`);
-  const llm = new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL);
+  const llm = new GeminiLLM(GEMINI_API_KEY, modelChain(GEMINI_MODEL));
   const result = await runAgent({ agentLlm: llm, supplierLlm: llm }, scenario, print);
   console.log('\nResultado:', result);
 }

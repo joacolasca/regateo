@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyError } from './gemini';
+import { classifyError, FALLBACK_MODELS, modelChain } from './gemini';
 
 describe('classifyError', () => {
   it('cuota diaria o modelo no disponible: pasar al siguiente modelo', () => {
@@ -17,5 +17,13 @@ describe('classifyError', () => {
 
   it('cualquier otra cosa', () => {
     expect(classifyError(new SyntaxError('Unexpected token'))).toEqual({ kind: 'other' });
+  });
+});
+
+describe('modelChain', () => {
+  it('respeta el orden configurado y agrega los respaldos que faltan', () => {
+    expect(modelChain('gemini-3.8-flash')).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']);
+    expect(modelChain(undefined)).toEqual(FALLBACK_MODELS);
+    expect(modelChain(' a , b ')).toEqual(['a', 'b', ...FALLBACK_MODELS]);
   });
 });

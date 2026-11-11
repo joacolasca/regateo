@@ -5,14 +5,14 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { runAgent } from '../src/core/agent';
 import { scoreRun, summarize, type RunScore } from '../src/core/evals';
 import type { RunEvent } from '../src/core/events';
-import { GeminiLLM } from '../src/core/gemini';
+import { GeminiLLM, modelChain } from '../src/core/gemini';
 import { scenarios } from '../src/core/scenarios';
 
 async function main() {
   const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-  if (!GEMINI_API_KEY || !GEMINI_MODEL) throw new Error('Faltan GEMINI_API_KEY o GEMINI_MODEL en .env.local');
+  if (!GEMINI_API_KEY) throw new Error('Falta GEMINI_API_KEY en .env.local');
   const runsPerScenario = Number(process.argv[2] ?? 3);
-  const llm = new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL);
+  const llm = new GeminiLLM(GEMINI_API_KEY, modelChain(GEMINI_MODEL));
   const scores: RunScore[] = [];
 
   const save = () => {
