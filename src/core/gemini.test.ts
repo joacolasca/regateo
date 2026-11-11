@@ -15,6 +15,10 @@ describe('classifyError', () => {
     expect(classifyError('{"error":{"code":503,"status":"UNAVAILABLE"}}')).toEqual({ kind: 'busy', waitMs: 2500 });
   });
 
+  it('clave inválida: cortar sin reintentar', () => {
+    expect(classifyError('{"error":{"code":400,"message":"API key not valid. Please pass a valid API key."}}')).toEqual({ kind: 'auth' });
+  });
+
   it('cualquier otra cosa', () => {
     expect(classifyError(new SyntaxError('Unexpected token'))).toEqual({ kind: 'other' });
   });

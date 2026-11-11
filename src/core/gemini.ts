@@ -9,10 +9,12 @@ export type GeminiFailure =
   | { kind: 'busy'; waitMs: number } // 503 de alta demanda: se reintenta en segundos
   | { kind: 'rate'; waitMs: number } // 429 por minuto: se espera lo que pide la API
   | { kind: 'exhausted' } // cuota diaria agotada o modelo no disponible: se pasa al siguiente modelo
+  | { kind: 'auth' } // clave inválida: no tiene sentido reintentar ni cambiar de modelo
   | { kind: 'other' };
 
 export function classifyError(error: unknown): GeminiFailure {
   const text = String(error);
+  if (/API key not valid|API_KEY_INVALID|"code":\s*(401|403)/.test(text)) return { kind: 'auth' };
   if (/"code":\s*404|PerDay|no longer available|not found for API/i.test(text)) return { kind: 'exhausted' };
   if (/"code":\s*503|UNAVAILABLE/.test(text)) return { kind: 'busy', waitMs: 2500 };
   if (/"code":\s*429|RESOURCE_EXHAUSTED/.test(text)) {
@@ -90,6 +92,7 @@ export class GeminiLLM implements LLM {
           attempt -= 1; // cambiar de modelo no consume un intento
           continue;
         }
+        if (failure.kind === 'auth') break;
         if (failure.kind === 'other') {
           if (attempt >= 2) break;
           continue;

@@ -64,6 +64,7 @@ export function Evals({ data, baseline }: { data: EvalFile; baseline?: EvalFile 
                     {e.baselineShort(percent(base))}
                   </p>
                 )}
+                {label === e.injection && <p className="mt-2 font-mono text-[11px] text-muted">{e.injectionRuns(s.injectionRuns ?? 0)}</p>}
               </div>
             ))}
           </div>
