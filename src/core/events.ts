@@ -13,6 +13,8 @@ export type RunEvent =
   | { type: 'ranking'; rows: RankRow[] }
   | { type: 'recommendation'; supplierId: string; explanation: string; forced: boolean }
   | { type: 'policy_result'; supplierId: string; result: PolicyResult }
+  | { type: 'manipulation_flagged'; supplierId: string; kinds: string[] }
+  | { type: 'llm_call'; role: 'agent' | 'supplier'; supplierId?: string; model?: string; ms: number; inputTokens: number; outputTokens: number; attempts: number }
   | { type: 'error'; message: 'agent_llm_failed' | 'no_offers' };
 
 export type Emit = (event: RunEvent) => void;

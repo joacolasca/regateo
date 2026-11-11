@@ -55,3 +55,59 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rise, .dot { animation: none; }
 }
+
+/* Botones con sombra dura que se hunden al apretar. */
+.press {
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.press:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 0 var(--color-ink); }
+.press:active { transform: translate(3px, 3px); box-shadow: 0 0 0 0 var(--color-ink); }
+
+/* Sello de goma: tinta irregular y golpe al aparecer. */
+@keyframes stamp-in {
+  0% { opacity: 0; transform: rotate(-5deg) scale(1.7); }
+  60% { opacity: 1; transform: rotate(-5deg) scale(0.94); }
+  100% { opacity: 0.92; transform: rotate(-5deg) scale(1); }
+}
+.stamp {
+  border: 3px double currentColor;
+  border-radius: 8px;
+  padding: 0.35rem 0.9rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transform: rotate(-5deg);
+  filter: url(#rough-ink);
+  animation: stamp-in 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+/* Ticket de caja: papel blanco con el borde inferior cortado en zigzag. */
+.receipt {
+  background: #fffdf8;
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-bottom: 0;
+  --zig: 10px;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--zig) 51% repeat-x,
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--zig) / 2) no-repeat;
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--color-marker);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp { animation: none; }
+  .press { transition: none; }
+}
+
+/* Mensaje marcado por el detector: cinta de peligro de fondo. */
+.hazard {
+  background:
+    repeating-linear-gradient(-45deg, rgb(176 58 46 / 0.07) 0 8px, transparent 8px 16px),
+    var(--color-paper);
+}

@@ -1,14 +1,18 @@
 'use client';
 
 import { REPO_URL } from './Header';
+import { InkBand } from './InkBand';
 import { useLang } from './lang';
 
+const SITE = 'https://regateo.vercel.app';
+
 export function HowItWorks() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const h = t.how;
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="font-display text-4xl tracking-tight sm:text-5xl">{h.title}</h1>
+      <InkBand shape="ripple" />
+      <h1 className="mt-8 font-display text-5xl tracking-tight sm:text-6xl">{h.title}</h1>
       <p className="mt-4 max-w-2xl text-lg text-muted">{h.lede}</p>
 
       <ol className="mt-8 flex flex-wrap items-center gap-y-3 text-sm">
@@ -39,6 +43,32 @@ export function HowItWorks() {
           </article>
         ))}
       </div>
+
+      <section className="mt-12">
+        <h2 className="font-display text-3xl tracking-tight">{h.integrate}</h2>
+        <p className="mt-2 text-muted">{h.integrateLede}</p>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <article className="min-w-0 rounded-2xl border border-line bg-card p-5">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-marker">{h.api}</h3>
+            <pre className="mt-3 overflow-x-auto rounded-xl bg-ink p-4 font-mono text-xs leading-relaxed text-paper">{`curl -X POST ${SITE}/api/v1/negotiate \\
+  -H 'Content-Type: application/json' \\
+  -d '{"scenarioId":"cajas-pizzeria","lang":"${lang}"}'
+
+curl ${SITE}/api/v1/scenarios`}</pre>
+            <p className="mt-3 text-sm text-muted">{h.apiNote}</p>
+          </article>
+          <article className="min-w-0 rounded-2xl border border-line bg-card p-5">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-marker">{h.mcp}</h3>
+            <pre className="mt-3 overflow-x-auto rounded-xl bg-ink p-4 font-mono text-xs leading-relaxed text-paper">{`git clone ${REPO_URL}
+cd regateo && npm install
+cp .env.example .env.local   # GEMINI_API_KEY
+
+claude mcp add regateo -- \\
+  npm --prefix "$PWD" run --silent mcp`}</pre>
+            <p className="mt-3 text-sm text-muted">{h.mcpNote}</p>
+          </article>
+        </div>
+      </section>
 
       <p className="mt-8 text-sm text-muted">
         {h.stack}{' '}

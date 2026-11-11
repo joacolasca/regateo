@@ -1,34 +1,16 @@
-import { z } from 'zod';
 import { runAgent } from '@/core/agent';
 import type { RunEvent } from '@/core/events';
-import { GeminiLLM } from '@/core/gemini';
-import { getScenario } from '@/core/scenarios';
-import { Throttle } from '@/lib/throttle';
+import { prepareRun } from '@/lib/live';
 
 export const maxDuration = 120;
 
-const Body = z.object({ scenarioId: z.string(), lang: z.enum(['es', 'en']) });
-
-const throttle = new Throttle({
-  perKey: 3, perKeyWindowMs: 10 * 60_000,
-  global: 40, globalWindowMs: 24 * 60 * 60_000,
-});
-
-const unavailable = (status: number) => Response.json({ error: 'live_unavailable' }, { status });
-
+/** Corrida en vivo para la página: transmite cada evento del agente como una línea JSON (NDJSON). */
 export async function POST(req: Request) {
-  const parsed = Body.safeParse(await req.json().catch(() => null));
-  const scenario = parsed.success ? getScenario(parsed.data.scenarioId) : undefined;
-  if (!parsed.success || !scenario) return Response.json({ error: 'bad_request' }, { status: 400 });
+  // En vivo no se espera ante un límite por minuto: se corta y la página vuelve a la grabación.
+  const prepared = prepareRun(await req.json().catch(() => null), req, { patient: false });
+  if (!prepared.ok) return Response.json({ error: prepared.error }, { status: prepared.status });
+  const { scenario, lang, llm } = prepared;
 
-  const { GEMINI_API_KEY, GEMINI_MODEL } = process.env;
-  if (!GEMINI_API_KEY || !GEMINI_MODEL) return unavailable(503);
-
-  const visitor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (!throttle.allow(visitor)) return unavailable(429);
-
-  // En vivo no se espera ante un límite del modelo: se corta y el cliente vuelve a la grabación.
-  const llm = new GeminiLLM(GEMINI_API_KEY, GEMINI_MODEL, { patient: false });
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -40,7 +22,7 @@ export async function POST(req: Request) {
         }
       };
       try {
-        await runAgent({ agentLlm: llm, supplierLlm: llm }, scenario, emit, parsed.data.lang);
+        await runAgent({ agentLlm: llm, supplierLlm: llm }, scenario, emit, lang);
       } finally {
         try {
           controller.close();

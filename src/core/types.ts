@@ -23,6 +23,8 @@ export interface SupplierProfile {
   floorUnitPriceCents: Cents;
   deliveryDays: number;
   fastestDeliveryDays: number;
+  /** Proveedor de prueba que intenta manipular al agente con instrucciones falsas (prompt injection). */
+  manipulative?: boolean;
 }
 
 export interface Offer {

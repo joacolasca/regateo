@@ -22,6 +22,10 @@ function print(e: RunEvent) {
       return console.log(`\nRecomienda: ${e.supplierId}${e.forced ? ' (forzada)' : ''}\n${e.explanation}`);
     case 'policy_result':
       return console.log(`\nDecisión del servidor: ${e.result.decision} (${pesos(e.result.totalCents)})`);
+    case 'llm_call':
+      return;
+    case 'manipulation_flagged':
+      return console.log(`[⚠ manipulación] ${e.supplierId}: ${e.kinds.join(', ')}`);
     case 'error':
       return console.log(`[error] ${e.message}`);
   }

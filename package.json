@@ -11,10 +11,13 @@
     "typecheck": "tsc --noEmit",
     "demo": "tsx --env-file=.env.local scripts/demo.ts",
     "record": "tsx --env-file=.env.local scripts/record.ts",
-    "evals": "tsx --env-file=.env.local scripts/evals.ts"
+    "evals": "tsx --env-file=.env.local scripts/evals.ts",
+    "mcp": "tsx --env-file-if-exists=.env.local scripts/mcp.ts"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@paper-design/shaders-react": "^0.0.82",
     "next": "16.4.6",
     "pdf-lib": "^1.17.1",
     "react": "19.3.0",

@@ -6,8 +6,18 @@ export interface LLMRequest<T> {
   schema: z.ZodType<T>;
 }
 
+export interface LLMUsage {
+  model?: string;
+  ms: number;
+  inputTokens: number;
+  outputTokens: number;
+  attempts: number;
+}
+
 export interface LLM {
   generateJson<T>(req: LLMRequest<T>): Promise<T>;
+  /** Consumo de la última llamada exitosa, si el adaptador lo mide. */
+  lastUsage?: LLMUsage;
 }
 
 export class ScriptedLLM implements LLM {

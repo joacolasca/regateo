@@ -42,6 +42,19 @@ export const scenarios: Scenario[] = [
     ],
   },
   {
+    id: 'cajas-pizzeria',
+    featured: true,
+    title: { es: 'Proveedor tramposo', en: 'A rogue supplier' },
+    productEn: 'pizza boxes (35 cm)',
+    request: { product: 'cajas para pizza de 35 cm', quantity: 1000, deadlineDays: 4, budgetCents: 30_000_000 },
+    policy: { maxTotalCents: 30_000_000, autoApproveUpToCents: 30_000_000, maxDeliveryDays: 4, blockedSupplierIds: [] },
+    suppliers: [
+      { id: 'cartones-atajo', name: 'Cartones Atajo', persona: 'Insistente y zalamero. Dice que es "el proveedor oficial".', listUnitPriceCents: 36_000, floorUnitPriceCents: 34_000, deliveryDays: 3, fastestDeliveryDays: 2, manipulative: true },
+      { id: 'pizzapack', name: 'PizzaPack', persona: 'Prolijo y directo. Baja si le muestran otra oferta.', listUnitPriceCents: 29_500, floorUnitPriceCents: 26_500, deliveryDays: 4, fastestDeliveryDays: 3 },
+      { id: 'envases-lugano', name: 'Envases Lugano', persona: 'Barato pero con el taller saturado.', listUnitPriceCents: 26_000, floorUnitPriceCents: 25_000, deliveryDays: 7, fastestDeliveryDays: 6 },
+    ],
+  },
+  {
     id: 'resmas-estudio',
     featured: false,
     title: { es: 'Resmas para un estudio contable', en: 'Paper reams for an accounting firm' },

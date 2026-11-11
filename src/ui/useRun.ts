@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RunEvent } from '../core/events';
-import type { Lang, Scenario } from '../core/types';
+import type { Lang, Policy, Scenario } from '../core/types';
 import { applyEvent, emptyDesk, startEvent, type DeskState } from './desk-state';
 
 export type Mode = 'demo' | 'live';
@@ -10,7 +10,7 @@ export type RunStatus = 'ready' | 'running' | 'done';
 
 const PAUSE: Record<RunEvent['type'], number> = {
   run_started: 0, agent_message: 1100, supplier_message: 1500, round_discarded: 700,
-  ranking: 1000, recommendation: 900, policy_result: 800, error: 300,
+  ranking: 1000, recommendation: 900, policy_result: 800, error: 300, llm_call: 0, manipulation_flagged: 0,
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,11 +21,11 @@ async function loadRecording(scenarioId: string, lang: Lang): Promise<RunEvent[]
   return (await res.json()).events as RunEvent[];
 }
 
-async function* readLive(scenarioId: string, lang: Lang, signal: AbortSignal): AsyncGenerator<RunEvent> {
+async function* readLive(scenarioId: string, lang: Lang, policy: Policy | undefined, signal: AbortSignal): AsyncGenerator<RunEvent> {
   const res = await fetch('/api/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ scenarioId, lang }),
+    body: JSON.stringify({ scenarioId, lang, policy }),
     signal,
   });
   if (!res.ok || !res.body) throw new Error('live_unavailable');
@@ -72,12 +72,12 @@ export function useRun(scenario: Scenario, lang: Lang) {
     }
   }, [scenario, lang]);
 
-  const start = useCallback(async (requested: Mode) => {
+  const start = useCallback(async (requested: Mode, policy?: Policy) => {
     const id = ++runId.current;
     abort.current?.abort();
     const controller = new AbortController();
     abort.current = controller;
-    setDesk(applyEvent(emptyDesk, startEvent(scenario, lang)));
+    setDesk(applyEvent(emptyDesk, startEvent(scenario, lang, requested === 'live' ? policy : undefined)));
     setStatus('running');
     setMode(requested);
     setFellBack(false);
@@ -96,7 +96,7 @@ export function useRun(scenario: Scenario, lang: Lang) {
         let offers = 0;
         let failed = false;
         try {
-          for await (const event of readLive(scenario.id, lang, controller.signal)) {
+          for await (const event of readLive(scenario.id, lang, policy, controller.signal)) {
             if (runId.current !== id) return;
             if (event.type === 'run_started') continue;
             if (event.type === 'supplier_message') offers += 1;

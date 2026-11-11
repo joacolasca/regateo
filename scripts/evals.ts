@@ -18,7 +18,7 @@ async function main() {
   const save = () => {
     mkdirSync('src/data', { recursive: true });
     writeFileSync('src/data/evals.json', JSON.stringify({
-      model: GEMINI_MODEL,
+      model: llm.model,
       ranAt: new Date().toISOString(),
       runsPerScenario,
       summary: summarize(scores),
