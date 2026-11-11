@@ -81,8 +81,9 @@ export class GeminiLLM implements LLM {
         return parsed;
       } catch (error) {
         lastError = error;
-        if (process.env.LLM_DEBUG) console.error(`[gemini ${model}]`, String(error).slice(0, 240));
         const failure = classifyError(error);
+        // Observabilidad: tipo de falla, modelo e intento. El texto del error de Google no incluye la clave.
+        console.error(`[gemini] model=${model} attempt=${attempt} kind=${failure.kind} ${String(error).replace(/\s+/g, ' ').slice(0, process.env.LLM_DEBUG ? 400 : 160)}`);
         if (failure.kind === 'exhausted') {
           if (this.models.length === 1) break;
           this.models.shift(); // el modelo queda descartado para el resto de la corrida
